@@ -2,12 +2,35 @@ import express from "express"
 import bodyParser from "body-parser";
 import mongoose from "mongoose";
 import userRouter from "./routes/userRouter.js";
+import jwt from "jsonwebtoken" ;
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const app=express()
 
 app.use(bodyParser.json());
+app.use((req,res,next)=>{
 
-let mongoUrl="mongodb+srv://admin_36:1234@cluster0.rawrfc0.mongodb.net/HotelManagement?appName=Cluster0"
+    let token=req.header()
+    ("Authorization")
+    
+    if(token != null){
+        token = token.replace("Bearer ","")
+
+        jwt.verify(token,"IT-secret-26!",
+            (err,decoded)=>{
+                if(!err){
+                    req.user=decoded;
+                }
+            })
+    }
+    next();
+    
+
+})
+
+let mongoUrl=process.env.MONGO_URL;
 
 mongoose.connect(mongoUrl)
 

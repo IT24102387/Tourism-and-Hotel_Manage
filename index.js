@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import userRouter from "./routes/userRouter.js";
 import jwt from "jsonwebtoken" ;
 import dotenv from "dotenv";
+import reviewRouter from "./routes/reviewRouter.js";
 
 dotenv.config();
 
@@ -12,13 +13,13 @@ const app=express()
 app.use(bodyParser.json());
 app.use((req,res,next)=>{
 
-    let token=req.header()
+    let token=req.header
     ("Authorization")
     
     if(token != null){
         token = token.replace("Bearer ","")
 
-        jwt.verify(token,"IT-secret-26!",
+        jwt.verify(token,process.env.JWT_SECRET,
             (err,decoded)=>{
                 if(!err){
                     req.user=decoded;
@@ -42,7 +43,16 @@ connection.once("open",()=>{
 })
 
 app.use("/api/users",userRouter);
+app.use("/api/reviews",reviewRouter);
 
 app.listen(5000,()=>{
     console.log("Server is running on port 5000")
 })
+
+//customer
+// "email": "kusal1@example.com",
+// "password": "123",
+
+//Admin
+// "email": "kusal2@example.com",
+// "password": "123",

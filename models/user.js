@@ -35,6 +35,11 @@ const userSchema=new mongoose.Schema({
        type : String,
        required : true,
 
+    },
+    profilePicture : {
+        type : String,
+        required : true,
+        default : "https://img.freepik.com/premium-vector/avatar-profile-icon-flat-style-female-user-profile-vector-illustration-isolated-background-women-profile-sign-business-concept_157943-38866.jpg"
     }
     
 

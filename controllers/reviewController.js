@@ -23,22 +23,20 @@ export function addReview(req,res){
         res.status(500).json({error : "Review addition failed"});
     });
 }
-export function getReviews(req,res){
-    //user see
+export async function getReviews(req,res){
     const user =req.user;
-    if(user== null || user.role !="admin"){
-        Review.find({isApproved : true}).then((reviews)=>{
-            res.json(reviews);
-        })
-        return
-    }
-    //admin see all review
-    if(user.role == "admin"){
-        Review.find().then((reviews)=>{
-            res.json(reviews);
-        })
-    }
+    try{
+        if(user.role=="admin"){
+            const reviews=await Review.find();
+            res.json(reviews)
+        }else{
+            const reviews=await Review.find({isApproved : true})
+            res.json(reviews)
+        }
 
+    }catch(error){
+        res.status(500).json({error : "Failed to get reviews"})
+    }
 }
 
 //delete review

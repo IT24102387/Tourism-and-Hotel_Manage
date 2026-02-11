@@ -5,10 +5,14 @@ import userRouter from "./routes/userRouter.js";
 import jwt from "jsonwebtoken" ;
 import dotenv from "dotenv";
 import reviewRouter from "./routes/reviewRouter.js";
+import productRouter from "./routes/ProductRouter.js";
+import inquiryRouter from "./routes/inquiryRouter.js";
+import cors from "cors";
 
 dotenv.config();
 
 const app=express()
+app.use(cors());
 
 app.use(bodyParser.json());
 app.use((req,res,next)=>{
@@ -43,11 +47,13 @@ connection.once("open",()=>{
 })
 
 app.use("/api/users",userRouter);
+app.use("/api/products",productRouter);
 app.use("/api/reviews",reviewRouter);
+app.use("/api/inquiries",inquiryRouter)
 
 app.listen(5000,()=>{
     console.log("Server is running on port 5000")
-})
+});
 
 //customer
 // "email": "kusal1@example.com",

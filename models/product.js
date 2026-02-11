@@ -4,7 +4,8 @@ const productSchema=new mongoose.Schema({
     key :{
         type : String,
         required : true,
-        unique : true,
+        unique: true,
+        trim : true
     },
     name :{
         type : String,
@@ -39,13 +40,7 @@ const productSchema=new mongoose.Schema({
         default :"Kataragama"
 
     },
-    rating :{
-        type : Number,
-        min : 0,
-        max : 5,
-        default : 0
-
-    },
+    
     image :{
         type : [String],
         required : true,

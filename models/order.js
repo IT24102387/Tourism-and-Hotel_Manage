@@ -32,7 +32,7 @@ const orderSchema=new mongoose.Schema({
                         type:String,
                         required:true
                     },
-                    price:{
+                    dailyRentalprice:{
                         type: Number,
                         required:true
                     }

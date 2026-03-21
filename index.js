@@ -9,6 +9,9 @@ import productRouter from "./routes/ProductRouter.js";
 import inquiryRouter from "./routes/inquiryRouter.js";
 import cors from "cors";
 import orderRouter from "./routes/orderRouter.js";
+// import dns from 'node:dns';
+// dns.setServers(['8.8.8.8', '8.8.4.4']);
+// dns.setDefaultResultOrder('ipv4first');
 
 dotenv.config();
 

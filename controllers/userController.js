@@ -2,6 +2,7 @@ import User from "../models/user.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import axios from "axios";
 
 dotenv.config()
 export function registerUser(req,res){
@@ -28,7 +29,13 @@ export function loginUser(req,res){
         (user)=>{
             if(user==null){
                 res.status(404).json({error : "User not found"});
+            //update blockpage
             }else{
+                if(user.isBlocked){
+                    res.status(403).json({error:"Your account  is blocked please contact the admin"});
+                    return;
+
+                }
 
                 const isPasswordCorrect=bcrypt.compareSync(data.password,user.password);
                 if(isPasswordCorrect){
@@ -70,4 +77,111 @@ export function isItCustomer(req){
         }
     }
     return isCustomer
+}
+export async function getAllUsers(req,res){
+    if(isItAdmin(req)){
+        try{
+            const users=await User.find();
+            res.json(users);
+        }catch(e){
+            res.status(500).json({error:"Failed to get user"})
+        }
+    }else{
+        res.status(403).json({error:"Unothorization"})
+    }
+
+}
+export async function blockOrUnblockUser(req,res){
+    const email=req.params.email;
+
+    if(isItAdmin(req)){
+        try{
+            const user=await User.findOne(
+            {
+                email:email
+            }
+          )
+          if(user==null){
+            res.status(404).json({error:"User not found"})
+            return;
+          }
+          const isBlocked=!user.isBlocked;
+          await User.updateOne(
+            {
+                email:email
+            },
+            {
+                isBlocked:isBlocked
+            }
+          )
+          res.json({message:"User blocked /unblocked succcessfully"})
+
+        }catch(e){
+            res.status(500).json({error:"Failed to get user"})
+        }
+    }else{
+        res.status(403).json({error:"Unauthorized"})
+    }
+}
+export function getUser(req,res){
+    if(req.user!=null){
+        res.json(req.user)
+    }else{
+        res.status(403).json({error:"Unauthorized"})
+    }
+}
+
+export async function loginWithGoogle(req,res){
+    //https://www.googleapis.com/oauth2/v3/userinfo
+    const accesToken=req.body.accessToken
+    console.log(accesToken)
+    try{
+    const response=await axios.get("https://www.googleapis.com/oauth2/v3/userinfo",{
+        headers:{
+            Authorization:`Bearer ${accesToken}`
+        }
+    })
+    console.log(response.data);
+    const user=await User.findOne({
+        email:response.data.email
+    })
+    if(user!=null){
+         const token=jwt.sign({
+                        firstName:user.firstName,
+                        lastName: user.lastName,
+                        email:user.email,
+                        role:user.role,
+                        profilePicture :user.profilePicture,
+                        phone:user.phone
+
+                    },process.env.JWT_SECRET)
+                    res.json({message: "Login successful",token :token,user:user})
+
+    }else{
+        const newUser=new User({
+            email:response.data.email,
+            password:"123",
+            firstName:response.data.given_name,
+            lastName:response.data.family_name,
+            address:"Not Given",
+            phone:"Not Given",
+            profilePicture:response.data.picture
+        });
+        const savedUser=await newUser.save();
+        const token=jwt.sign({
+                        firstName:savedUser.firstName,
+                        lastName: savedUser.lastName,
+                        email:savedUser.email,
+                        role:savedUser.role,
+                        profilePicture :savedUser.profilePicture,
+                        phone:savedUser.phone
+
+                    },process.env.JWT_SECRET)
+                    res.json({message: "Login successful",token :token,user:savedUser})
+
+    }
+}catch(e){
+    console.log(e)
+    res.status(500).json({error:"Failed to login with google"})
+}
 }

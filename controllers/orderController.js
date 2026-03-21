@@ -1,5 +1,6 @@
 import Order from "../models/order.js";
 import Product from "../models/product.js";
+import { isItAdmin, isItCustomer } from "./userController.js";
 
 export async function createOrder(req,res){
     const data=req.body;
@@ -84,4 +85,122 @@ export async function createOrder(req,res){
         })
     }
         
+}
+export async function getQuote(req,res){
+    console.log(req.body)
+    const data=req.body;
+    const orderInfo={
+        orderedItems : []
+
+    };
+    
+    let oneDayCost=0;
+    for(let i=0;i<data.orderedItems.length;i++){ //array item check
+        try{
+            const product=await Product.findOne({key:data.orderedItems[i].key})
+            if(product == null){
+                res.status(404).json({
+                    message : "Product with key"+data.orderedItems[i].key+"not found"
+                })
+                return;
+
+            }
+            if(product.availability == false){
+                res.status(400).json({
+                    message :"Product with key "+data.orderedItems[i].key+"is not available"
+                })
+                return;
+            }
+            orderInfo.orderedItems.push({
+                product:{
+                    key:product.key,
+                    name:product.name,
+                    image:product.image[0],
+                    dailyRentalprice:product.dailyRentalprice
+                },
+                quantity:data.orderedItems[i].qty
+            })
+            oneDayCost += product.dailyRentalprice*data.orderedItems[i].qty;
+
+        }catch(e){
+            res.status(500).json({
+                message:"Failed to create order"
+            })
+            return
+
+        }
+    }
+    orderInfo.days=data.days;
+    orderInfo.startingDate=data.startingDate;
+    orderInfo.endingDate=data.endingDate;
+    orderInfo.totalAmount=oneDayCost*data.days;
+    try {
+        res.json({
+            message:"Order quatation",
+            total:orderInfo.totalAmount
+        })
+    }catch(e){
+        console.log(e)
+        res.status(500).json({
+            message:"Failed to create order"
+        })
+    }
+
+}
+export async function getOrders(req,res){
+    console.log(req.user)
+    if(isItCustomer(req)){
+        try{
+            const orders=await Order.find({email:req.user.email});
+            res.json(orders);
+        }catch(e){
+            res.status(500).json({error:"Failed to get orders"})
+        }
+    }else if(isItAdmin(req)){
+        try{
+            const orders=await Order.find()
+            res.json(orders)
+        }catch(e){
+            res.status(500).json({error:"Failed to get orders"});
+        }
+    }else{
+        res.status(403).json({error:"Unauthorized"});
+    }
+
+}
+export async function approveOrRejectOrder(req,res){
+    const orderId=req.params.orderId;
+    const status=req.body.status;
+
+    if(isItAdmin(req)){
+        try{
+            const order=await Order.findOne(
+                {
+                    orderId:orderId
+                }
+            )
+        if(order==null){
+            res.status(404).json({error:"Order not found"})
+            return;
+        }
+        await Order.updateOne(
+            {
+                orderId:orderId
+
+            },
+            {
+                status:status
+            }
+
+        );
+        res.json({message:"Order approved/rejected successfully"})
+
+        }catch(e){
+            res.status(500).json({error:"Failed to get order"})
+        }
+        
+       
+    }else{
+        res.status(403).json({error:"Unauthorized"})
+    }
 }

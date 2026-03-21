@@ -23,22 +23,25 @@ export function addReview(req,res){
         res.status(500).json({error : "Review addition failed"});
     });
 }
-export async function getReviews(req,res){
-    const user =req.user;
-    try{
-        if(user.role=="admin"){
-            const reviews=await Review.find();
-            res.json(reviews)
-        }else{
-            const reviews=await Review.find({isApproved : true})
-            res.json(reviews)
+export async function getReviews(req, res) {
+    try {
+        const user = req.user; // may be undefined
+
+        // If user exists and is admin → return all reviews
+        if (user && user.role === "admin") {
+            const reviews = await Review.find();
+            return res.json(reviews);
         }
 
-    }catch(error){
-        res.status(500).json({error : "Failed to get reviews"})
+        // Otherwise (public or non‑admin) → return only approved reviews
+        const reviews = await Review.find({ isApproved: true });
+        res.json(reviews);
+
+    } catch (error) {
+        console.error(error); // log for debugging
+        res.status(500).json({ error: "Failed to get reviews" });
     }
 }
-
 //delete review
 export function deleteReview(req,res){
     const email=req.params.email;

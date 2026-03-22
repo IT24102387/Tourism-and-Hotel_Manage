@@ -8,7 +8,11 @@ import reviewRouter from "./routes/reviewRouter.js";
 import productRouter from "./routes/ProductRouter.js";
 import inquiryRouter from "./routes/inquiryRouter.js";
 import cors from "cors";
+import orderRouter from "./routes/orderRouter.js";
 import dns from 'node:dns';
+import packageRouter from "./routes/packageRouter.js";
+import customBookingRouter from "./routes/customBookingRouter.js";
+import vehicleRouter from "./routes/vehicleRouter.js";
 dns.setServers(['8.8.8.8', '8.8.4.4']);
 dns.setDefaultResultOrder('ipv4first');
 
@@ -54,6 +58,9 @@ app.use("/api/products",productRouter);
 app.use("/api/reviews",reviewRouter);
 app.use("/api/inquiries",inquiryRouter);
 app.use("/api/orders",orderRouter);
+app.use("/api/packages", packageRouter);
+app.use("/api/custom-bookings", customBookingRouter);
+app.use("/api/vehicles", vehicleRouter);
 
 app.listen(5000,()=>{
     console.log("Server is running on port 5000")

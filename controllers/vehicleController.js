@@ -1,0 +1,91 @@
+import Vehicle from "../models/Vehicle.js";
+
+const isAdmin   = (req) => req.user?.role === "admin";
+const isLoggedIn = (req) => req.user != null;
+
+// ── CREATE ──────────────────────────────────────────────────────
+export async function addVehicle(req, res) {
+    if (!isAdmin(req)) return res.status(403).json({ message: "Admin only" });
+    try {
+        const vehicleId = `VEH-${Date.now().toString().slice(-5)}${Math.random().toString(36).slice(2,4).toUpperCase()}`;
+        const vehicle = new Vehicle({ ...req.body, vehicleId });
+        await vehicle.save();
+        res.json({ message: "Vehicle added successfully", vehicle });
+    } catch (e) {
+        res.status(500).json({ message: "Failed to add vehicle", error: e.message });
+    }
+}
+
+// ── GET ALL ─────────────────────────────────────────────────────
+export async function getVehicles(req, res) {
+    try {
+        // If querying for a specific package, return vehicles assigned to it
+        const { packageId } = req.query;
+        let filter = {};
+        if (packageId) {
+            filter = { assignedPackages: packageId, availability: true, status: "Available" };
+        } else if (!isAdmin(req)) {
+            filter = { availability: true };
+        }
+        const vehicles = await Vehicle.find(filter).sort({ createdAt: -1 });
+        res.json(vehicles);
+    } catch (e) {
+        res.status(500).json({ message: "Failed to fetch vehicles" });
+    }
+}
+
+// ── GET ONE ─────────────────────────────────────────────────────
+export async function getVehicleById(req, res) {
+    try {
+        const vehicle = await Vehicle.findOne({ vehicleId: req.params.vehicleId });
+        if (!vehicle) return res.status(404).json({ message: "Vehicle not found" });
+        res.json(vehicle);
+    } catch (e) {
+        res.status(500).json({ message: "Failed to fetch vehicle" });
+    }
+}
+
+// ── UPDATE ──────────────────────────────────────────────────────
+export async function updateVehicle(req, res) {
+    if (!isAdmin(req)) return res.status(403).json({ message: "Admin only" });
+    try {
+        const vehicle = await Vehicle.findOneAndUpdate(
+            { vehicleId: req.params.vehicleId },
+            req.body,
+            { new: true }
+        );
+        if (!vehicle) return res.status(404).json({ message: "Vehicle not found" });
+        res.json({ message: "Vehicle updated", vehicle });
+    } catch (e) {
+        res.status(500).json({ message: "Failed to update vehicle", error: e.message });
+    }
+}
+
+// ── DELETE ──────────────────────────────────────────────────────
+export async function deleteVehicle(req, res) {
+    if (!isAdmin(req)) return res.status(403).json({ message: "Admin only" });
+    try {
+        const vehicle = await Vehicle.findOneAndDelete({ vehicleId: req.params.vehicleId });
+        if (!vehicle) return res.status(404).json({ message: "Vehicle not found" });
+        res.json({ message: "Vehicle deleted" });
+    } catch (e) {
+        res.status(500).json({ message: "Failed to delete vehicle" });
+    }
+}
+
+// ── ASSIGN TO PACKAGES ──────────────────────────────────────────
+export async function assignVehicleToPackages(req, res) {
+    if (!isAdmin(req)) return res.status(403).json({ message: "Admin only" });
+    try {
+        const { packageIds } = req.body; // array of packageId strings
+        const vehicle = await Vehicle.findOneAndUpdate(
+            { vehicleId: req.params.vehicleId },
+            { assignedPackages: packageIds },
+            { new: true }
+        );
+        if (!vehicle) return res.status(404).json({ message: "Vehicle not found" });
+        res.json({ message: "Packages assigned", vehicle });
+    } catch (e) {
+        res.status(500).json({ message: "Failed to assign packages" });
+    }
+}

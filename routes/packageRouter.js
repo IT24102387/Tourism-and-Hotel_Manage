@@ -1,51 +1,18 @@
-const express = require("express");
-const router = express.Router();
-const {
-  getAllPackages,
-  getPackageById,
-  createPackage,
-  updatePackage,
-  deletePackage,
-  getAllPackagesAdmin,
-} = require("../controllers/packageController");
-const { protect, restrictTo } = require("../middleware/authMiddleware");
+import express from "express";
+import {
+    addPackage,
+    getPackages,
+    getPackageById,
+    updatePackage,
+    deletePackage
+} from "../controllers/packageController.js";
 
-// ─────────────────────────────────────────────
-//  PUBLIC ROUTES (no login required)
-//  Visitors can browse packages before logging in
-// ─────────────────────────────────────────────
-router.get("/", getAllPackages);           // GET /api/packages
-router.get("/:id", getPackageById);       // GET /api/packages/:id
+const packageRouter = express.Router();
 
-// ─────────────────────────────────────────────
-//  ADMIN ONLY ROUTES
-// ─────────────────────────────────────────────
-router.get(
-  "/admin/all",
-  protect,
-  restrictTo("admin"),
-  getAllPackagesAdmin
-); // GET /api/packages/admin/all — all packages including inactive
+packageRouter.post("/",                      addPackage);
+packageRouter.get("/",                       getPackages);
+packageRouter.get("/:packageId",             getPackageById);
+packageRouter.put("/:packageId",             updatePackage);
+packageRouter.delete("/:packageId",          deletePackage);
 
-router.post(
-  "/",
-  protect,
-  restrictTo("admin"),
-  createPackage
-); // POST /api/packages
-
-router.put(
-  "/:id",
-  protect,
-  restrictTo("admin"),
-  updatePackage
-); // PUT /api/packages/:id
-
-router.delete(
-  "/:id",
-  protect,
-  restrictTo("admin"),
-  deletePackage
-); // DELETE /api/packages/:id
-
-module.exports = router;
+export default packageRouter;

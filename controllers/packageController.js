@@ -1,213 +1,77 @@
-import PackageModel from "../models/package";
+import Package from "../models/Package.js";
 
-export const getAllPackages = async (req, res) => {
-  try {
-    const { type } = req.query; // optional filter: ?type=default or ?type=customised
+function isAdmin(req) {
+    return req.user && req.user.role === "admin";
+}
 
-    const filter = { isActive: true };
-    if (type && ["default", "customised"].includes(type)) {
-      filter.packageType = type;
+// ── CREATE ──────────────────────────────────────────────────
+export async function addPackage(req, res) {
+    if (!req.user) return res.status(401).json({ message: "Please login and try again" });
+    if (!isAdmin(req)) return res.status(403).json({ message: "You are not authorized to perform this action" });
+
+    try {
+        const data = req.body;
+        const newPackage = new Package(data);
+        await newPackage.save();
+        res.json({ message: "Package added successfully", package: newPackage });
+    } catch (e) {
+        res.status(500).json({ message: "Package addition failed", error: e.message });
     }
+}
 
-    const packages = await PackageModel.find(filter)
-      .select("-createdBy -__v")
-      .sort({ createdAt: -1 });
-
-    res.status(200).json({
-      success: true,
-      count: packages.length,
-      packages,
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// ─────────────────────────────────────────────
-//  @desc    Get single package by ID (public)
-//  @route   GET /api/packages/:id
-//  @access  Public
-// ─────────────────────────────────────────────
-exports.getPackageById = async (req, res) => {
-  try {
-    const package_ = await Package.findOne({
-      _id: req.params.id,
-      isActive: true,
-    }).select("-__v");
-
-    if (!package_) {
-      return res.status(404).json({
-        success: false,
-        message: "Package not found.",
-      });
+// ── READ ALL ─────────────────────────────────────────────────
+export async function getPackages(req, res) {
+    try {
+        if (isAdmin(req)) {
+            const packages = await Package.find().sort({ createdAt: -1 });
+            res.json(packages);
+        } else {
+            const packages = await Package.find({ availability: true }).sort({ createdAt: -1 });
+            res.json(packages);
+        }
+    } catch (e) {
+        res.status(500).json({ message: "Failed to get packages" });
     }
+}
 
-    res.status(200).json({ success: true, package: package_ });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// ─────────────────────────────────────────────
-//  @desc    Create a new package
-//  @route   POST /api/packages
-//  @access  Private - Admin only
-// ─────────────────────────────────────────────
-exports.createPackage = async (req, res) => {
-  try {
-    const {
-      name,
-      description,
-      packageType,
-      price,
-      duration,
-      inclusions,
-      customOptions,
-      imageUrl,
-    } = req.body;
-
-    // Validate: customised package must include customOptions
-    if (packageType === "customised" && !customOptions) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Customised packages must include customOptions (routes, vehicles, extra charges).",
-      });
+// ── READ ONE ─────────────────────────────────────────────────
+export async function getPackageById(req, res) {
+    try {
+        const pkg = await Package.findOne({ packageId: req.params.packageId });
+        if (!pkg) return res.status(404).json({ message: "Package not found" });
+        res.json(pkg);
+    } catch (e) {
+        res.status(500).json({ message: "Failed to get package" });
     }
+}
 
-    const newPackage = await Package.create({
-      name,
-      description,
-      packageType,
-      price,
-      duration,
-      inclusions,
-      customOptions: packageType === "customised" ? customOptions : null,
-      imageUrl,
-      createdBy: req.user._id,
-    });
+// ── UPDATE ───────────────────────────────────────────────────
+export async function updatePackage(req, res) {
+    if (!req.user) return res.status(401).json({ message: "Please login and try again" });
+    if (!isAdmin(req)) return res.status(403).json({ message: "You are not authorized to perform this action" });
 
-    res.status(201).json({
-      success: true,
-      message: "Package created successfully.",
-      package: newPackage,
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// ─────────────────────────────────────────────
-//  @desc    Update a package
-//  @route   PUT /api/packages/:id
-//  @access  Private - Admin only
-// ─────────────────────────────────────────────
-exports.updatePackage = async (req, res) => {
-  try {
-    const package_ = await Package.findById(req.params.id);
-
-    if (!package_) {
-      return res.status(404).json({
-        success: false,
-        message: "Package not found.",
-      });
+    try {
+        const { packageId } = req.params;
+        const data = req.body;
+        const updated = await Package.findOneAndUpdate({ packageId }, data, { new: true });
+        if (!updated) return res.status(404).json({ message: "Package not found" });
+        res.json({ message: "Package updated successfully", package: updated });
+    } catch (e) {
+        res.status(500).json({ message: "Failed to update package", error: e.message });
     }
+}
 
-    const {
-      name,
-      description,
-      packageType,
-      price,
-      duration,
-      inclusions,
-      customOptions,
-      imageUrl,
-      isActive,
-    } = req.body;
+// ── DELETE ───────────────────────────────────────────────────
+export async function deletePackage(req, res) {
+    if (!req.user) return res.status(401).json({ message: "Please login and try again" });
+    if (!isAdmin(req)) return res.status(403).json({ message: "You are not authorized to perform this action" });
 
-    // If changing to customised, require customOptions
-    const resolvedType = packageType || package_.packageType;
-    if (resolvedType === "customised" && customOptions === null) {
-      return res.status(400).json({
-        success: false,
-        message: "Customised packages must have customOptions defined.",
-      });
+    try {
+        const { packageId } = req.params;
+        const deleted = await Package.findOneAndDelete({ packageId });
+        if (!deleted) return res.status(404).json({ message: "Package not found" });
+        res.json({ message: "Package deleted successfully" });
+    } catch (e) {
+        res.status(500).json({ message: "Failed to delete package" });
     }
-
-    const updatedPackage = await Package.findByIdAndUpdate(
-      req.params.id,
-      {
-        name,
-        description,
-        packageType,
-        price,
-        duration,
-        inclusions,
-        customOptions: resolvedType === "customised" ? customOptions : null,
-        imageUrl,
-        isActive,
-      },
-      { new: true, runValidators: true }
-    );
-
-    res.status(200).json({
-      success: true,
-      message: "Package updated successfully.",
-      package: updatedPackage,
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// ─────────────────────────────────────────────
-//  @desc    Delete a package (soft delete - sets isActive to false)
-//  @route   DELETE /api/packages/:id
-//  @access  Private - Admin only
-// ─────────────────────────────────────────────
-exports.deletePackage = async (req, res) => {
-  try {
-    const package_ = await Package.findById(req.params.id);
-
-    if (!package_) {
-      return res.status(404).json({
-        success: false,
-        message: "Package not found.",
-      });
-    }
-
-    // Soft delete: deactivate instead of removing from DB
-    // This preserves historical booking data integrity
-    await Package.findByIdAndUpdate(req.params.id, { isActive: false });
-
-    res.status(200).json({
-      success: true,
-      message: "Package removed successfully.",
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// ─────────────────────────────────────────────
-//  @desc    Get ALL packages including inactive (admin dashboard)
-//  @route   GET /api/packages/admin/all
-//  @access  Private - Admin only
-// ─────────────────────────────────────────────
-exports.getAllPackagesAdmin = async (req, res) => {
-  try {
-    const packages = await Package.find()
-      .populate("createdBy", "name email")
-      .sort({ createdAt: -1 });
-
-    res.status(200).json({
-      success: true,
-      count: packages.length,
-      packages,
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-
+}

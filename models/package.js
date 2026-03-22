@@ -1,140 +1,74 @@
 import mongoose from "mongoose";
-const customOptionsSchema = new mongoose.Schema({
 
-// Three safari routes available
-    routes: {
-
-      type: [String],
-      default: ["Route A - North Sector", "Route B - South Sector", "Route C - East Sector"],
+const packageSchema = new mongoose.Schema({
+    packageId: {
+        type: String,
+        required: true,
+        unique: true,
+        trim: true
     },
-
-    // Two vehicle types
-    vehicles: {
-      type: [String],
-      default: ["Jeep", "Van"],
-    },
-
-    // Extra charges set by admin for each selection
-    // These allow admin to configure pricing add-ons
-    guideExtraCharge: {
-      type: Number,
-      default: 0,
-      min: 0,
-    },
-    breakfastExtraCharge: {
-      type: Number,
-      default: 0,
-      min: 0,
-    },
-    jeepExtraCharge: {
-      type: Number,
-      default: 0,
-      min: 0,
-    },
-    vanExtraCharge: {
-      type: Number,
-      default: 0,
-      min: 0,
-    },
-    routeAExtraCharge: {
-      type: Number,
-      default: 0,
-      min: 0,
-    },
-    routeBExtraCharge: {
-      type: Number,
-      default: 0,
-      min: 0,
-    },
-    routeCExtraCharge: {
-      type: Number,
-      default: 0,
-      min: 0,
-    },
-  },
-  { _id: false }
-);
-
-// ─────────────────────────────────────────────
-//  Main Package Schema
-// ─────────────────────────────────────────────
-const packageSchema = new mongoose.Schema(
-  {
     name: {
-      type: String,
-      required: [true, "Package name is required"],
-      trim: true,
+        type: String,
+        required: true,
+        trim: true
     },
-
+    category: {
+        type: String,
+        required: true,
+        enum: ["Safari", "Wildlife", "Pilgrimage", "Adventure", "Cultural", "Nature", "Combined"],
+        default: "Safari"
+    },
     description: {
-      type: String,
-      trim: true,
+        type: String,
+        required: true
     },
-
-    // "default" = fixed package, admin decides everything
-    // "customised" = visitor decides route, vehicle, breakfast, guide
-    packageType: {
-      type: String,
-      enum: ["default", "customised"],
-      required: [true, "Package type is required"],
+    highlights: {
+        type: [String],
+        default: []
     },
-
-    // Base price - always set by admin
-    price: {
-      type: Number,
-      required: [true, "Price is required"],
-      min: 0,
-    },
-
-    // Duration of the package in days
     duration: {
-      type: Number,
-      required: [true, "Duration is required"],
-      min: 1,
+        days: { type: Number, required: true, default: 1 },
+        nights: { type: Number, required: true, default: 0 }
     },
-
-    // What's included in EVERY package (admin sets these)
-    inclusions: {
-      accommodation: {
+    price: {
+        type: Number,
+        required: true
+    },
+    maxGroupSize: {
+        type: Number,
+        default: 10
+    },
+    includes: {
+        type: [String],
+        default: []
+    },
+    excludes: {
+        type: [String],
+        default: []
+    },
+    meetingPoint: {
+        type: String,
+        default: "Kataragama Town Center"
+    },
+    availability: {
         type: Boolean,
-        default: true,
-      },
-      food: {
+        default: true
+    },
+    customizationEnabled: {
         type: Boolean,
-        default: true,
-      },
-      yalaParkVisit: {
-        type: Boolean,
-        default: true,
-      },
+        default: true
     },
-
-    // Only populated when packageType === "customised"
-    customOptions: {
-      type: customOptionsSchema,
-      default: null,
+    images: {
+        type: [String],
+        default: ["https://www.shutterstock.com/image-vector/missing-picture-page-website-design-600nw-1552421075.jpg"]
     },
+    rating: {
+        type: Number,
+        default: 0,
+        min: 0,
+        max: 5
+    }
+}, { timestamps: true });
 
-    // Package image URL (optional, for display on frontend)
-    imageUrl: {
-      type: String,
-      default: "",
-    },
-
-    // Admin can deactivate a package without deleting it
-    isActive: {
-      type: Boolean,
-      default: true,
-    },
-
-    // Track which admin created this package
-    createdBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-  },
-  { timestamps: true }
-);
-
-module.exports = mongoose.model("Package", packageSchema);
+const Package = mongoose.model("Package", packageSchema);
+export default Package;

@@ -1,8 +1,6 @@
 import Addon from "../models/Addon.js";
 
-// const isAdmin = (req) => req.user?.role === "admin";
-const isAdmin = (req) => true; // For testing purposes, replace with actual auth check in production
-
+const isAdmin = (req) => req.user?.role === "admin";
 
 // ── CREATE ──────────────────────────────────────────────────────
 export async function addAddon(req, res) {

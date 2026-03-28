@@ -14,10 +14,15 @@ import packageRouter from "./routes/packageRouter.js";
 import customBookingRouter from "./routes/customBookingRouter.js";
 import vehicleRouter from "./routes/vehicleRouter.js";
 import addonRouter from "./routes/addonRouter.js";
+import router from "./routes/eventRouter.js";
+import OpenAI from "openai";
 dns.setServers(['8.8.8.8', '8.8.4.4']);
 dns.setDefaultResultOrder('ipv4first');
 
 dotenv.config();
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 const app=express()
 app.use(cors());
@@ -63,6 +68,41 @@ app.use("/api/packages", packageRouter);
 app.use("/api/custom-bookings", customBookingRouter);
 app.use("/api/vehicles", vehicleRouter);
 app.use("/api/addons", addonRouter);
+app.use("/api/events",router);
+
+
+
+// openapi call
+app.post("/api/describe", async (req, res) => {
+  try {
+    const { place } = req.body;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4.1-mini",
+      messages: [
+        {
+          role: "system",
+          content: "You are a travel guide. Write engaging, tourist-friendly descriptions.",
+        },
+        {
+          role: "user",
+          content: `Write a detailed, attractive travel description about ${place} in Sri Lanka. Include history, attractions, and visitor experience.`,
+        },
+      ],
+    });
+
+    res.json({
+      description: response.choices[0].message.content,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      description: "Failed to generate description.",
+    });
+  }
+});
+
+
 
 app.listen(5000,()=>{
     console.log("Server is running on port 5000")
@@ -75,4 +115,6 @@ app.listen(5000,()=>{
 //Admin
 // "email": "kusal2@example.com",
 // "password": "123",
+
+
 

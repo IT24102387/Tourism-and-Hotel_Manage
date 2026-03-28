@@ -4,7 +4,7 @@ const reviewSchema=new mongoose.Schema({
     email : {
         type : String,
         required :true,
-        unique : true
+        //unique : true
     },
     name :{
         type : String,
@@ -15,7 +15,8 @@ const reviewSchema=new mongoose.Schema({
         type : Number,
         min : 0,
         max : 5,
-        required : true
+        default : 0,
+        //required : true
     },
     comment : {
         type : String,
@@ -38,9 +39,13 @@ const reviewSchema=new mongoose.Schema({
         required : true,
         default : false
 
+    },
+    section: {
+        type: String,
+        required: true,
+        default: 'All'
     }
 
 })
 
-const Review=mongoose.model("Review",reviewSchema)
-export default Review;
+export default mongoose.model("Review",reviewSchema);

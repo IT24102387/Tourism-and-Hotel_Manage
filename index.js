@@ -12,7 +12,7 @@ import orderRouter from "./routes/orderRouter.js";
 import dns from 'node:dns';
 import packageRouter from "./routes/packageRouter.js";
 import customBookingRouter from "./routes/customBookingRouter.js";
-import vehicleRouter from "./routes/vehicleRouter.js";
+import packageVehicleRouter from "./routes/packageVehicleRouter.js";
 import addonRouter from "./routes/addonRouter.js";
 dns.setServers(['8.8.8.8', '8.8.4.4']);
 dns.setDefaultResultOrder('ipv4first');
@@ -61,7 +61,7 @@ app.use("/api/inquiries",inquiryRouter);
 app.use("/api/orders",orderRouter);
 app.use("/api/packages", packageRouter);
 app.use("/api/custom-bookings", customBookingRouter);
-app.use("/api/vehicles", vehicleRouter);
+app.use("/api/package-vehicles", packageVehicleRouter);
 app.use("/api/addons", addonRouter);
 
 app.listen(5000,()=>{

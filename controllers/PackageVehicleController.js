@@ -1,4 +1,4 @@
-import Vehicle from "../models/Vehicle.js";
+import PackageVehicle from "../models/PackageVehicle.js";
 
 const isAdmin   = (req) => req.user?.role === "admin";
 const isLoggedIn = (req) => req.user != null;
@@ -8,7 +8,7 @@ export async function addVehicle(req, res) {
     if (!isAdmin(req)) return res.status(403).json({ message: "Admin only" });
     try {
         const vehicleId = `VEH-${Date.now().toString().slice(-5)}${Math.random().toString(36).slice(2,4).toUpperCase()}`;
-        const vehicle = new Vehicle({ ...req.body, vehicleId });
+        const vehicle = new PackageVehicle({ ...req.body, vehicleId });
         await vehicle.save();
         res.json({ message: "Vehicle added successfully", vehicle });
     } catch (e) {
@@ -27,7 +27,7 @@ export async function getVehicles(req, res) {
         } else if (!isAdmin(req)) {
             filter = { availability: true };
         }
-        const vehicles = await Vehicle.find(filter).sort({ createdAt: -1 });
+        const vehicles = await PackageVehicle.find(filter).sort({ createdAt: -1 });
         res.json(vehicles);
     } catch (e) {
         res.status(500).json({ message: "Failed to fetch vehicles" });
@@ -37,7 +37,7 @@ export async function getVehicles(req, res) {
 // ── GET ONE ─────────────────────────────────────────────────────
 export async function getVehicleById(req, res) {
     try {
-        const vehicle = await Vehicle.findOne({ vehicleId: req.params.vehicleId });
+        const vehicle = await PackageVehicle.findOne({ vehicleId: req.params.vehicleId });
         if (!vehicle) return res.status(404).json({ message: "Vehicle not found" });
         res.json(vehicle);
     } catch (e) {
@@ -49,7 +49,7 @@ export async function getVehicleById(req, res) {
 export async function updateVehicle(req, res) {
     if (!isAdmin(req)) return res.status(403).json({ message: "Admin only" });
     try {
-        const vehicle = await Vehicle.findOneAndUpdate(
+        const vehicle = await PackageVehicle.findOneAndUpdate(
             { vehicleId: req.params.vehicleId },
             req.body,
             { new: true }
@@ -65,7 +65,7 @@ export async function updateVehicle(req, res) {
 export async function deleteVehicle(req, res) {
     if (!isAdmin(req)) return res.status(403).json({ message: "Admin only" });
     try {
-        const vehicle = await Vehicle.findOneAndDelete({ vehicleId: req.params.vehicleId });
+        const vehicle = await PackageVehicle.findOneAndDelete({ vehicleId: req.params.vehicleId });
         if (!vehicle) return res.status(404).json({ message: "Vehicle not found" });
         res.json({ message: "Vehicle deleted" });
     } catch (e) {
@@ -78,7 +78,7 @@ export async function assignVehicleToPackages(req, res) {
     if (!isAdmin(req)) return res.status(403).json({ message: "Admin only" });
     try {
         const { packageIds } = req.body; // array of packageId strings
-        const vehicle = await Vehicle.findOneAndUpdate(
+        const vehicle = await PackageVehicle.findOneAndUpdate(
             { vehicleId: req.params.vehicleId },
             { assignedPackages: packageIds },
             { new: true }

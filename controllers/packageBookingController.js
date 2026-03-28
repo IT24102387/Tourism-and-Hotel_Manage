@@ -1,14 +1,14 @@
-import CustomPackageBooking from "../models/CustomPackageBooking.js";
+import PackageBooking from "../models/PackageBooking.js";
 
 const isAdmin   = (req) => req.user?.role === "admin";
 const isLoggedIn = (req) => req.user != null;
 
-// CREATE — user submits a customised booking
-export async function createCustomBooking(req, res) {
+// CREATE — user submits a booking
+export async function createPackageBooking(req, res) {
     if (!isLoggedIn(req)) return res.status(401).json({ message: "Please login to book a package" });
     try {
-        const bookingId = `CPB-${Date.now().toString().slice(-6)}${Math.random().toString(36).slice(2,5).toUpperCase()}`;
-        const booking = new CustomPackageBooking({
+        const bookingId = `PB-${Date.now().toString().slice(-6)}${Math.random().toString(36).slice(2,5).toUpperCase()}`;
+        const booking = new PackageBooking({
             ...req.body,
             bookingId,
             userEmail: req.user.email,
@@ -22,11 +22,11 @@ export async function createCustomBooking(req, res) {
 }
 
 // GET ALL — admin sees all, user sees own
-export async function getCustomBookings(req, res) {
+export async function getPackageBookings(req, res) {
     if (!isLoggedIn(req)) return res.status(401).json({ message: "Please login" });
     try {
         const filter = isAdmin(req) ? {} : { userEmail: req.user.email };
-        const bookings = await CustomPackageBooking.find(filter).sort({ createdAt: -1 });
+        const bookings = await PackageBooking.find(filter).sort({ createdAt: -1 });
         res.json(bookings);
     } catch (e) {
         res.status(500).json({ message: "Failed to fetch bookings" });
@@ -34,10 +34,10 @@ export async function getCustomBookings(req, res) {
 }
 
 // GET ONE
-export async function getCustomBookingById(req, res) {
+export async function getPackageBookingById(req, res) {
     if (!isLoggedIn(req)) return res.status(401).json({ message: "Please login" });
     try {
-        const booking = await CustomPackageBooking.findOne({ bookingId: req.params.bookingId });
+        const booking = await PackageBooking.findOne({ bookingId: req.params.bookingId });
         if (!booking) return res.status(404).json({ message: "Booking not found" });
         if (!isAdmin(req) && booking.userEmail !== req.user.email) return res.status(403).json({ message: "Access denied" });
         res.json(booking);
@@ -47,10 +47,10 @@ export async function getCustomBookingById(req, res) {
 }
 
 // UPDATE STATUS — admin only
-export async function updateBookingStatus(req, res) {
+export async function updatePackageBookingStatus(req, res) {
     if (!isAdmin(req)) return res.status(403).json({ message: "Admin only" });
     try {
-        const booking = await CustomPackageBooking.findOneAndUpdate(
+        const booking = await PackageBooking.findOneAndUpdate(
             { bookingId: req.params.bookingId },
             { status: req.body.status },
             { new: true }
@@ -63,13 +63,13 @@ export async function updateBookingStatus(req, res) {
 }
 
 // DELETE — owner or admin
-export async function deleteCustomBooking(req, res) {
+export async function deletePackageBooking(req, res) {
     if (!isLoggedIn(req)) return res.status(401).json({ message: "Please login" });
     try {
-        const booking = await CustomPackageBooking.findOne({ bookingId: req.params.bookingId });
+        const booking = await PackageBooking.findOne({ bookingId: req.params.bookingId });
         if (!booking) return res.status(404).json({ message: "Booking not found" });
         if (!isAdmin(req) && booking.userEmail !== req.user.email) return res.status(403).json({ message: "Access denied" });
-        await CustomPackageBooking.deleteOne({ bookingId: req.params.bookingId });
+        await PackageBooking.deleteOne({ bookingId: req.params.bookingId });
         res.json({ message: "Booking cancelled" });
     } catch (e) {
         res.status(500).json({ message: "Failed to cancel booking" });

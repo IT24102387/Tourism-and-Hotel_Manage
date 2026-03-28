@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const customPackageBookingSchema = new mongoose.Schema({
+const packageBookingSchema = new mongoose.Schema({
     bookingId:   { type: String, required: true, unique: true },
     packageId:   { type: String, required: true },
     packageName: { type: String, required: true },
@@ -37,5 +37,5 @@ const customPackageBookingSchema = new mongoose.Schema({
     },
 }, { timestamps: true });
 
-const CustomPackageBooking = mongoose.model("CustomPackageBooking", customPackageBookingSchema);
-export default CustomPackageBooking;
+const PackageBooking = mongoose.model("PackageBooking", packageBookingSchema);
+export default PackageBooking;

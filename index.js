@@ -11,7 +11,7 @@ import cors from "cors";
 import orderRouter from "./routes/orderRouter.js";
 import dns from 'node:dns';
 import packageRouter from "./routes/packageRouter.js";
-import customBookingRouter from "./routes/customBookingRouter.js";
+import packageBookingRouter from "./routes/packageBookingRouter.js";
 import packageVehicleRouter from "./routes/packageVehicleRouter.js";
 import addonRouter from "./routes/addonRouter.js";
 dns.setServers(['8.8.8.8', '8.8.4.4']);
@@ -60,7 +60,7 @@ app.use("/api/reviews",reviewRouter);
 app.use("/api/inquiries",inquiryRouter);
 app.use("/api/orders",orderRouter);
 app.use("/api/packages", packageRouter);
-app.use("/api/custom-bookings", customBookingRouter);
+app.use("/api/package-bookings", packageBookingRouter);
 app.use("/api/package-vehicles", packageVehicleRouter);
 app.use("/api/addons", addonRouter);
 

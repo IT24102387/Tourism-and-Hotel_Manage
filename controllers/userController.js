@@ -3,12 +3,14 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import axios from "axios";
+import { randomUUID } from "crypto";
 
 dotenv.config()
 export function registerUser(req,res){
 
     const data=req.body;
     data.password=bcrypt.hashSync(data.password,10)
+    data.userId = randomUUID();
 
     const newUser=new User(data)
 
@@ -40,6 +42,8 @@ export function loginUser(req,res){
                 const isPasswordCorrect=bcrypt.compareSync(data.password,user.password);
                 if(isPasswordCorrect){
                     const token=jwt.sign({
+                        userId: user.userId,
+                        _id:user._id,
                         firstName:user.firstName,
                         lastName: user.lastName,
                         email:user.email,
@@ -147,6 +151,8 @@ export async function loginWithGoogle(req,res){
     })
     if(user!=null){
          const token=jwt.sign({
+                        userId: user.userId,
+                        _id:user._id,
                         firstName:user.firstName,
                         lastName: user.lastName,
                         email:user.email,
@@ -159,16 +165,19 @@ export async function loginWithGoogle(req,res){
 
     }else{
         const newUser=new User({
+            userId: randomUUID(),
             email:response.data.email,
             password:"123",
             firstName:response.data.given_name,
-            lastName:response.data.family_name,
+            lastName:response.data.family_name || "",
             address:"Not Given",
             phone:"Not Given",
             profilePicture:response.data.picture
         });
         const savedUser=await newUser.save();
         const token=jwt.sign({
+                        userId: savedUser.userId,
+                        _id:savedUser._id,
                         firstName:savedUser.firstName,
                         lastName: savedUser.lastName,
                         email:savedUser.email,

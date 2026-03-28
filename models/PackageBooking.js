@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 
 const packageBookingSchema = new mongoose.Schema({
     bookingId:   { type: String, required: true, unique: true },
+    userId:      { type: String, default: null },
     packageId:   { type: String, required: true },
     packageName: { type: String, required: true },
     userEmail:   { type: String, required: true },

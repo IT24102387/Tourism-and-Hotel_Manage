@@ -20,12 +20,7 @@ const packageBookingSchema = new mongoose.Schema({
         vehiclePricePerDay: { type: Number, default: 0 },
     },
 
-    addOns: {
-        meals:        { type: Boolean, default: false },
-        privateGuide: { type: Boolean, default: false },
-        photography:  { type: Boolean, default: false },
-        hotelPickup:  { type: Boolean, default: false },
-    },
+    addOns: { type: [mongoose.Schema.Types.Mixed], default: [] },
     specialRequests:    { type: String, default: "" },
     basePricePerPerson: { type: Number, required: true },
     vehicleTotal:       { type: Number, default: 0 },

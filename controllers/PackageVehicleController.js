@@ -29,6 +29,7 @@ export async function getVehicles(req, res) {
         }
         const vehicles = await PackageVehicle.find(filter).sort({ createdAt: -1 });
         res.json(vehicles);
+
     } catch (e) {
         res.status(500).json({ message: "Failed to fetch vehicles" });
     }

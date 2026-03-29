@@ -11,6 +11,7 @@ export async function createPackageBooking(req, res) {
         const booking = new PackageBooking({
             ...req.body,
             bookingId,
+            userId:    req.user.userId,
             userEmail: req.user.email,
             userName:  `${req.user.firstName} ${req.user.lastName}`,
         });
@@ -25,8 +26,19 @@ export async function createPackageBooking(req, res) {
 export async function getPackageBookings(req, res) {
     if (!isLoggedIn(req)) return res.status(401).json({ message: "Please login" });
     try {
-        const filter = isAdmin(req) ? {} : { userEmail: req.user.email };
+        const filter = isAdmin(req) ? {} : { userId: req.user.userId };
         const bookings = await PackageBooking.find(filter).sort({ createdAt: -1 });
+        res.json(bookings);
+    } catch (e) {
+        res.status(500).json({ message: "Failed to fetch bookings" });
+    }
+}
+
+// GET MY BOOKINGS — always returns only the logged-in user's bookings
+export async function getMyBookings(req, res) {
+    if (!isLoggedIn(req)) return res.status(401).json({ message: "Please login" });
+    try {
+        const bookings = await PackageBooking.find({ userId: req.user.userId }).sort({ createdAt: -1 });
         res.json(bookings);
     } catch (e) {
         res.status(500).json({ message: "Failed to fetch bookings" });

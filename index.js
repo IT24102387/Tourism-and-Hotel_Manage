@@ -16,6 +16,7 @@ import packageVehicleRouter from "./routes/packageVehicleRouter.js";
 import addonRouter from "./routes/addonRouter.js";
 import router from "./routes/eventRouter.js";
 import OpenAI from "openai";
+import vehicleRouter from "./routes/VehicleRouter.js";
 dns.setServers(['8.8.8.8', '8.8.4.4']);
 dns.setDefaultResultOrder('ipv4first');
 
@@ -69,6 +70,7 @@ app.use("/api/package-bookings", packageBookingRouter);
 app.use("/api/package-vehicles", packageVehicleRouter);
 app.use("/api/addons", addonRouter);
 app.use("/api/events",router);
+app.use("/api/vehicles", vehicleRouter);
 
 
 

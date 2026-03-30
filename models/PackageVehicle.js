@@ -15,7 +15,7 @@ const vehicleSchema = new mongoose.Schema({
     type: {
         type: String,
         required: true,
-        enum: ["Mahindra Jeep", "Toyota Hilux", "Safari Jeep", "Land Cruiser", "Minibus", "Van"],
+        enum: ["Mahindra Jeep", "Toyota Hilux", "Nissan Patrol", "Land Rover Defender"],
     },
     registrationNumber: {
         type: String,

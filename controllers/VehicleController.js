@@ -1,4 +1,4 @@
-import Vehicle from "../models/vehicle.js";
+import Vehicle from "../models/Vehicle.js";
 import { isItAdmin } from "./userController.js";
 
 // Add vehicle

@@ -17,8 +17,10 @@ import addonRouter from "./routes/addonRouter.js";
 import router from "./routes/eventRouter.js";
 import OpenAI from "openai";
 import vehicleRouter from "./routes/VehicleRouter.js";
-dns.setServers(['8.8.8.8', '8.8.4.4']);
-dns.setDefaultResultOrder('ipv4first');
+import vehicleBookingRouter from "./routes/VehicleBookingRouter.js";
+import restaurantRouter from "./routes/RestaurantRouter.js";
+// dns.setServers(['8.8.8.8', '8.8.4.4']);
+// dns.setDefaultResultOrder('ipv4first');
 
 dotenv.config();
 const openai = new OpenAI({
@@ -71,6 +73,8 @@ app.use("/api/package-vehicles", packageVehicleRouter);
 app.use("/api/addons", addonRouter);
 app.use("/api/events",router);
 app.use("/api/vehicles", vehicleRouter);
+app.use("/api/vehicle-bookings", vehicleBookingRouter);
+app.use("/api/restaurants", restaurantRouter);
 
 
 

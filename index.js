@@ -19,6 +19,8 @@ import OpenAI from "openai";
 import vehicleRouter from "./routes/VehicleRouter.js";
 import vehicleBookingRouter from "./routes/VehicleBookingRouter.js";
 import restaurantRouter from "./routes/RestaurantRouter.js";
+import roomRouter from "./routes/Roomrouter.js";
+import hotelRouter from "./routes/hotelRouter.js";
 // dns.setServers(['8.8.8.8', '8.8.4.4']);
 // dns.setDefaultResultOrder('ipv4first');
 
@@ -75,6 +77,8 @@ app.use("/api/events",router);
 app.use("/api/vehicles", vehicleRouter);
 app.use("/api/vehicle-bookings", vehicleBookingRouter);
 app.use("/api/restaurants", restaurantRouter);
+app.use("/api/rooms",           roomRouter);
+app.use("/api/hotels",          hotelRouter);
 
 
 

@@ -13,4 +13,3 @@ userRouter.get("/",getUser)
 
 export default userRouter;
 
-//test

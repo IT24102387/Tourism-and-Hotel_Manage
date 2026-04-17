@@ -1,103 +1,112 @@
 import Review from "../models/review.js";
 
-export function addReview(req,res){
-    if(req.user==null){
-        res.status(401).json({
-            message : "please login and try again"
+// ADD REVIEW (rating optional)
+export async function addReview(req, res) {
+    if (!req.user) return res.status(401).json({ message: "Please login" });
 
-        })
-        return;
+    const data = req.body;
+    data.name = `${req.user.firstName} ${req.user.lastName}`;
+    data.profilePicture = req.user.profilePicture;
+    data.email = req.user.email;
+    // rating may be undefined → default 0
+    if (data.rating === undefined) data.rating = 0;
+
+    try {
+        const newReview = new Review(data);
+        await newReview.save();
+        res.json({ message: "Review added successfully" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Review addition failed" });
     }
-    const data =req.body;
-
-    data.name=req.user.firstName +" "+req.user.lastName;
-    data.profilePicture=req.user.profilePicture;
-    data.email=req.user.email;
-
-    const newReview = new Review(data);
-
-    newReview.save().then(()=>{
-        res.json({message : "Review added successfully "});
-
-    }).catch((error)=>{
-        res.status(500).json({error : "Review addition failed"});
-    });
 }
+
+// GET ALL REVIEWS (admin sees all, public sees approved only)
 export async function getReviews(req, res) {
     try {
-        const user = req.user; // may be undefined
-
-        // If user exists and is admin → return all reviews
+        const user = req.user;
         if (user && user.role === "admin") {
-            const reviews = await Review.find();
+            const reviews = await Review.find().sort({ date: -1 });
             return res.json(reviews);
         }
-
-        // Otherwise (public or non‑admin) → return only approved reviews
-        const reviews = await Review.find({ isApproved: true });
+        const reviews = await Review.find({ isApproved: true }).sort({ date: -1 });
         res.json(reviews);
-
     } catch (error) {
-        console.error(error); // log for debugging
+        console.error(error);
         res.status(500).json({ error: "Failed to get reviews" });
     }
 }
-//delete review
-export function deleteReview(req,res){
-    const email=req.params.email;
 
-    if(req.user == null){
-        res.status(401).json({message : "Please login and try again"});
-        return
+// GET USER'S OWN REVIEWS (all of them)
+export async function getUserReviews(req, res) {
+    if (!req.user) return res.status(401).json({ message: "Please login" });
+    try {
+        const reviews = await Review.find({ email: req.user.email }).sort({ date: -1 });
+        res.json(reviews);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Failed to fetch your reviews" });
     }
-    if(req.user.role == "admin"){
-        Review.deleteOne
-        ({email:email}).then(()=>{
-            res.json({message : "Review deleted successfully "})
-        }).catch(()=>{
-            res.status(500).json({error : "Review deletion failed"});
-    });
-    return
-  }
-
-  if(req.user.role == "customer"){
-    if(req.user.email == email){
-        Review.deleteOne
-        ({email :email}).then(()=>{
-            res.json({message : "Review delete successfully "});
-        }).catch(()=>{
-            res.status(500).json({error : "Review deletion failed "});
-        });
-    }else{
-        res.status(403).json({message :"You are not authorized to perform this action "})
-    }
-
-  }
 }
-export function approveReview(req,res){
-    const email=req.params.email;
 
-    if(req.user==null){
-        res.status(401).json({message : "Please login and try again"});
-        return
+// UPDATE REVIEW (user can update own, reset approval)
+export async function updateReview(req, res) {
+    const { id } = req.params;
+    const { rating, comment, section } = req.body;
+
+    if (!req.user) return res.status(401).json({ message: "Please login" });
+
+    try {
+        const review = await Review.findById(id);
+        if (!review) return res.status(404).json({ message: "Review not found" });
+        if (review.email !== req.user.email && req.user.role !== "admin")
+            return res.status(403).json({ message: "Not authorized" });
+
+        if (rating !== undefined) review.rating = rating;
+        if (comment !== undefined) review.comment = comment;
+        if (section !== undefined) review.section = section;
+        if (review.isApproved) review.isApproved = false; // becomes pending
+        review.date = new Date();
+
+        await review.save();
+        res.json({ message: "Review updated successfully", review });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Update failed" });
     }
-    if(req.user.role == "admin"){
-        Review.updateOne(
-            {
-                email:email,
+}
 
-            },
-            {
-                isApproved:true,
+// DELETE REVIEW BY ID (user or admin)
+export async function deleteReviewById(req, res) {
+    const { id } = req.params;
+    if (!req.user) return res.status(401).json({ message: "Please login" });
 
-            }
-        ).then(()=>{
-            res.json({message : "Review approved successfully "});
-        }).catch(()=>{
-            res.status(500).json({error : "Review approval failed"})
-        });
-    }else{
-        res.status(403).json({message : "You are not and admin.only admins can approve the reviews"});
+    try {
+        const review = await Review.findById(id);
+        if (!review) return res.status(404).json({ message: "Review not found" });
+        if (review.email !== req.user.email && req.user.role !== "admin")
+            return res.status(403).json({ message: "Not authorized" });
+
+        await Review.findByIdAndDelete(id);
+        res.json({ message: "Review deleted successfully" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Deletion failed" });
     }
+}
 
+// APPROVE REVIEW BY ID (admin only)
+export async function approveReviewById(req, res) {
+    const { id } = req.params;
+    if (!req.user || req.user.role !== "admin")
+        return res.status(403).json({ message: "Admin only" });
+
+    try {
+        const review = await Review.findByIdAndUpdate(id, { isApproved: true }, { new: true });
+        if (!review) return res.status(404).json({ message: "Review not found" });
+        res.json({ message: "Review approved", review });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Approval failed" });
+    }
 }

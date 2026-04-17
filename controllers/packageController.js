@@ -1,4 +1,4 @@
-import Package from "../models/Package.js";
+import Package from "../models/package.js";
 
 function isAdmin(req) {
     return req.user && req.user.role === "admin";

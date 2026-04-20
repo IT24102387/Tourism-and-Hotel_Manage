@@ -12,9 +12,9 @@ const packageVehicleRouter = express.Router();
 
 packageVehicleRouter.post("/",                                addVehicle);
 packageVehicleRouter.get("/",                                 getVehicles);          // ?packageId=PKG-xxx for filtered
-packageVehicleRouter.get("/:vehicleId",                       getVehicleById);
-packageVehicleRouter.put("/:vehicleId",                       updateVehicle);
-packageVehicleRouter.put("/:vehicleId/assign-packages",       assignVehicleToPackages);
-packageVehicleRouter.delete("/:vehicleId",                    deleteVehicle);
+packageVehicleRouter.get("/:id",                       getVehicleById);
+packageVehicleRouter.put("/:id",                       updateVehicle);
+packageVehicleRouter.put("/:id/assign-packages",       assignVehicleToPackages);
+packageVehicleRouter.delete("/:id",                    deleteVehicle);
 
 export default packageVehicleRouter;

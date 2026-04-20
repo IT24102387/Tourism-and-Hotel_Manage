@@ -1,4 +1,5 @@
 import PackageVehicle from "../models/PackageVehicle.js";
+import PackageBooking from "../models/PackageBooking.js";
 
 const isAdmin   = (req) => req.user?.role === "admin";
 const isLoggedIn = (req) => req.user != null;
@@ -19,14 +20,36 @@ export async function addVehicle(req, res) {
 // ── GET ALL ─────────────────────────────────────────────────────
 export async function getVehicles(req, res) {
     try {
-        // If querying for a specific package, return vehicles assigned to it
-        const { packageId } = req.query;
+        const { packageId, tourDate } = req.query;
         let filter = {};
         if (packageId) {
             filter = { assignedPackages: packageId, availability: true, status: "Available" };
         } else if (!isAdmin(req)) {
             filter = { availability: true };
         }
+
+        // If a tourDate is provided, exclude vehicles already booked on that day
+        if (tourDate) {
+            const dayStart = new Date(tourDate);
+            dayStart.setHours(0, 0, 0, 0);
+            const dayEnd = new Date(tourDate);
+            dayEnd.setHours(23, 59, 59, 999);
+
+            const bookedOnDay = await PackageBooking.find({
+                "selectedVehicle.vehicleId": { $ne: null },
+                tourDate: { $gte: dayStart, $lte: dayEnd },
+                status: { $in: ["Pending", "Confirmed"] },
+            }).select("selectedVehicle.vehicleId");
+
+            const bookedVehicleIds = bookedOnDay
+                .map((b) => b.selectedVehicle?.vehicleId)
+                .filter(Boolean);
+
+            if (bookedVehicleIds.length > 0) {
+                filter.vehicleId = { $nin: bookedVehicleIds };
+            }
+        }
+
         const vehicles = await PackageVehicle.find(filter).sort({ createdAt: -1 });
         res.json(vehicles);
 

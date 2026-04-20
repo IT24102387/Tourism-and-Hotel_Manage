@@ -21,13 +21,12 @@ import vehicleBookingRouter from "./routes/VehicleBookingRouter.js";
 import restaurantRouter from "./routes/RestaurantRouter.js";
 import roomRouter from "./routes/Roomrouter.js";
 import hotelRouter from "./routes/hotelRouter.js";
-// dns.setServers(['8.8.8.8', '8.8.4.4']);
-// dns.setDefaultResultOrder('ipv4first');
+import placesRoute from "./routes/places.js";
+dns.setServers(['8.8.8.8', '8.8.4.4']);
+dns.setDefaultResultOrder('ipv4first');
 
 dotenv.config();
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+
 
 const app=express()
 app.use(cors());
@@ -79,6 +78,7 @@ app.use("/api/vehicle-bookings", vehicleBookingRouter);
 app.use("/api/restaurants", restaurantRouter);
 app.use("/api/rooms",           roomRouter);
 app.use("/api/hotels",          hotelRouter);
+app.use("/api/places", placesRoute);
 
 
 

@@ -105,12 +105,6 @@ export async function getQuote(req,res){
                 return;
 
             }
-            if(product.availability == false){
-                res.status(400).json({
-                    message :"Product with key "+data.orderedItems[i].key+"is not available"
-                })
-                return;
-            }
             orderInfo.orderedItems.push({
                 product:{
                     key:product.key,

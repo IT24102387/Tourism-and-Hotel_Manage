@@ -25,11 +25,26 @@ export async function addReview(req, res) {
 export async function getReviews(req, res) {
     try {
         const user = req.user;
-        if (user && user.role === "admin") {
-            const reviews = await Review.find().sort({ date: -1 });
-            return res.json(reviews);
+        const { sort, minRating } = req.query;
+
+        // Build filter object
+        let filter = {};
+        if (!user || user.role !== "admin") {
+            filter.isApproved = true;
         }
-        const reviews = await Review.find({ isApproved: true }).sort({ date: -1 });
+        if (minRating && !isNaN(minRating)) {
+            filter.rating = { $gte: parseInt(minRating) };
+        }
+
+        // Build sort object
+        let sortOption = {};
+        if (sort === 'rating') {
+            sortOption = { rating: -1, date: -1 };  // highest rating first, then newest
+        } else {
+            sortOption = { date: -1 };
+        }
+
+        const reviews = await Review.find(filter).sort(sortOption);
         res.json(reviews);
     } catch (error) {
         console.error(error);

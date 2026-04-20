@@ -54,9 +54,6 @@ export async function updateProduct(req,res){
             const data=req.body;
 
             await Product.updateOne({key :key},data)
-            //first key-what change product,secod key-apikey with come key
-            //this Product use make a connection in database collecton and and code
-            // updateOne Product has method
             res.json({
                 message : "Product updated successfully"
             })
@@ -77,7 +74,7 @@ export async function updateProduct(req,res){
 export async function deleteProduct(req,res){
     try{
         if(isItAdmin(req)){
-            const key=req.params.key; //get the key from parameter("/:key")
+            const key=req.params.key;
             await Product.deleteOne({key:key})
             res.json({
                 message : "Product deleted successfully "
@@ -113,5 +110,60 @@ export async function getProduct(req,res){
             message:"Failed to get product"
         })
 
+    }
+}
+
+// Decrease stock count when item is added to cart
+export async function decreaseStock(req,res){
+    try{
+        const key=req.params.key;
+        const product=await Product.findOne({key:key});
+
+        if(!product){
+            return res.status(404).json({ message:"Product not found" });
+        }
+        if(product.stockCount <= 0){
+            return res.status(400).json({ message:"Out of stock" });
+        }
+
+        const newStock = product.stockCount - 1;
+
+        await Product.updateOne(
+            { key: key },
+            { stockCount: newStock }
+        );
+
+        res.json({
+            message: "Stock updated",
+            stockCount: newStock
+        });
+    }catch(e){
+        res.status(500).json({ message:"Failed to update stock" });
+    }
+}
+
+export async function increaseStock(req,res){
+    try{
+        const key=req.params.key;
+        const qty = req.body.qty || 1;
+        const product=await Product.findOne({key:key});
+
+        if(!product){
+            return res.status(404).json({ message:"Product not found" });
+        }
+
+        const newStock = product.stockCount + qty;
+
+        await Product.updateOne(
+            { key: key },
+            { stockCount: newStock }
+        );
+
+        res.json({
+            message: "Stock restocked",
+            stockCount: newStock
+        });
+    }catch(e){
+        res.status(500).json({ message:"Failed to restock" });
     }
 }

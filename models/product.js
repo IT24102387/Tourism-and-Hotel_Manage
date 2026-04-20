@@ -40,7 +40,12 @@ const productSchema=new mongoose.Schema({
         default :"Kataragama"
 
     },
-    
+    stockCount :{
+        type : Number,
+        required : true,
+        default : 0,
+        min : 0
+    },
     image :{
         type : [String],
         required : true,

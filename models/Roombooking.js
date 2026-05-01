@@ -86,6 +86,23 @@ const roomBookingSchema = new mongoose.Schema({
     checkoutEmailSentAt: {
         type: Date,
         default: null
+    },
+    // User cancellation notification fields
+    cancelledByUser: {
+        type: Boolean,
+        default: false
+    },
+    cancelledAt: {
+        type: Date,
+        default: null
+    },
+    adminNotified: {
+        type: Boolean,
+        default: false
+    },
+    isCancelled: {
+        type: Boolean,
+        default: false
     }
 }, { timestamps: true });
 

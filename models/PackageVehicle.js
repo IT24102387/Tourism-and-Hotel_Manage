@@ -1,12 +1,6 @@
 import mongoose from "mongoose";
 
 const vehicleSchema = new mongoose.Schema({
-    vehicleId: {
-        type: String,
-        required: true,
-        unique: true,
-        trim: true,
-    },
     name: {
         type: String,
         required: true,
@@ -15,7 +9,7 @@ const vehicleSchema = new mongoose.Schema({
     type: {
         type: String,
         required: true,
-        enum: ["Mahindra Jeep", "Toyota Hilux", "Safari Jeep", "Land Cruiser", "Minibus", "Van"],
+        enum: ["Mahindra Jeep", "Toyota Hilux", "Nissan Patrol", "Land Rover Defender"],
     },
     registrationNumber: {
         type: String,
@@ -54,7 +48,7 @@ const vehicleSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ["Available", "On Trip", "Maintenance"],
+        enum: ["Available", "Maintenance"],
         default: "Available",
     },
     // Which packages this vehicle can be assigned to

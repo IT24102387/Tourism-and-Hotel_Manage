@@ -31,6 +31,9 @@ const packageBookingSchema = new mongoose.Schema({
         enum: ["Pending", "Confirmed", "Cancelled", "Completed"],
         default: "Pending",
     },
+    cancelledByUser:  { type: Boolean, default: false },
+    cancelledAt:      { type: Date,    default: null },
+    adminNotified:    { type: Boolean, default: false },
 }, { timestamps: true });
 
 const PackageBooking = mongoose.model("PackageBooking", packageBookingSchema);

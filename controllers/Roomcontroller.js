@@ -238,13 +238,16 @@ export async function updateRoom(req, res) {
 
 export async function deleteRoom(req, res) {
     try {
-        if (isItAdmin(req)) {
-            const key = req.params.key;
-            await Room.deleteOne({ key: key });
-            res.json({ message: "Room deleted successfully" });
-        } else {
-            res.status(403).json({ message: "You are not authorized to perform this action" });
+        if (!isItAdmin(req)) {
+            return res.status(403).json({ message: "You are not authorized to perform this action" });
         }
+        const key = req.params.key;
+        const existingBooking = await RoomBooking.findOne({ roomKey: key });
+        if (existingBooking) {
+            return res.status(400).json({ message: "Cannot delete room: there are existing bookings for this room" });
+        }
+        await Room.deleteOne({ key: key });
+        res.json({ message: "Room deleted successfully" });
     } catch (e) {
         res.status(500).json({ message: "Failed to delete room" });
     }
@@ -425,12 +428,55 @@ export async function cancelBooking(req, res) {
         const { bookingId } = req.params;
         const booking = await RoomBooking.findOne({ bookingId: bookingId, email: req.user.email });
         if (!booking) return res.status(404).json({ message: "Booking not found" });
+        if (booking.isCancelled) return res.status(400).json({ message: "Booking is already cancelled" });
         if (booking.isApproved && booking.paymentMethod !== "checkout")
             return res.status(400).json({ message: "Cannot cancel an approved booking. Contact support." });
-        await RoomBooking.deleteOne({ bookingId: bookingId });
+
+        // Soft-cancel: mark as cancelled and flag for admin notification
+        await RoomBooking.updateOne(
+            { bookingId: bookingId },
+            {
+                isCancelled:     true,
+                cancelledByUser: true,
+                cancelledAt:     new Date(),
+                adminNotified:   false,
+                isApproved:      false,
+                paymentStatus:   "rejected"
+            }
+        );
         res.json({ message: "Booking cancelled successfully" });
     } catch (e) {
         res.status(500).json({ message: "Failed to cancel booking" });
+    }
+}
+
+// ─── ADMIN: get unread cancellation notifications ─────────
+export async function getRoomCancelledNotifications(req, res) {
+    try {
+        if (!isItAdmin(req)) {
+            return res.status(403).json({ message: "You are not authorized to perform this action" });
+        }
+        const notifications = await RoomBooking.find(
+            { cancelledByUser: true, adminNotified: false },
+            { bookingId: 1, email: 1, room: 1, cancelledAt: 1, totalAmount: 1 }
+        ).sort({ cancelledAt: -1 });
+        res.json(notifications);
+    } catch (e) {
+        res.status(500).json({ message: "Failed to get notifications" });
+    }
+}
+
+// ─── ADMIN: mark cancellation notification as read ────────
+export async function markRoomNotificationRead(req, res) {
+    try {
+        if (!isItAdmin(req)) {
+            return res.status(403).json({ message: "You are not authorized to perform this action" });
+        }
+        const { bookingId } = req.params;
+        await RoomBooking.updateOne({ bookingId }, { adminNotified: true });
+        res.json({ message: "Notification marked as read" });
+    } catch (e) {
+        res.status(500).json({ message: "Failed to mark notification" });
     }
 }
 
